@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>Stock Prediction</title>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<style>
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(120deg, #6a74ff, #7e57c2);
+    min-height: 100vh;
+}
+
+.container {
+    width: 800px;
+    margin: 60px auto;
+    background: #fdfdff;
+    padding: 35px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+label {
+    font-weight: 600;
+    display: block;
+    margin-top: 20px;
+}
+
+select,
+input[type="text"],
+input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+}
+
+button {
+    width: 100%;
+    margin-top: 30px;
+    padding: 14px;
+    font-size: 16px;
+    background: #6a74ff;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #5a63e0;
+}
+
+.result {
+    margin-top: 35px;
+    padding: 20px;
+    border-radius: 12px;
+    background: #f4f6ff;
+}
+
+.green { color: green; font-weight: bold; }
+.orange { color: orange; font-weight: bold; }
+.red { color: red; font-weight: bold; }
+
+.error {
+    background: #ffe5e5;
+    color: red;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.graph-container{
+    margin-top:30px;
+}
+
+</style>
+
+
+<script>
+
+function toggleUpload(){
+
+    const stockSelect = document.getElementById("stockSelect").value;
+    const uploadSection = document.getElementById("uploadSection");
+    const manualTicker = document.getElementById("manualTicker");
+
+    uploadSection.style.display = "none";
+    manualTicker.style.display = "none";
+
+    if(stockSelect === "UPLOAD"){
+        uploadSection.style.display = "block";
+    }
+
+    if(stockSelect === "MANUAL"){
+        manualTicker.style.display = "block";
+    }
+
+}
+
+/* Ensure correct UI state when page reloads */
+
+window.onload = function(){
+    toggleUpload();
+}
+
+</script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📊 Stock Prediction</h1>
+
+<form method="POST" action="/" enctype="multipart/form-data">
+
+<label>Select Stock</label>
+
+<select name="stock" id="stockSelect" onchange="toggleUpload()" required>
+
+<option value="" disabled selected>-- Select Option --</option>
+
+{% for code, name in stocks.items() %}
+<option value="{{ code }}" {% if code == selected_stock %}selected{% endif %}>
+{{ name }} ({{ code }})
+</option>
+{% endfor %}
+
+<option value="MANUAL">Enter Stock Ticker</option>
+<option value="UPLOAD">Upload CSV Dataset</option>
+
+</select>
+
+
+<!-- MANUAL TICKER -->
+
+<div id="manualTicker" style="display:none;">
+
+<label>Enter Stock Ticker</label>
+
+<input
+type="text"
+name="manual_stock"
+placeholder="Example: AAPL, TSLA, NVDA, RELIANCE.NS">
+
+</div>
+
+
+<!-- CSV UPLOAD -->
+
+<div id="uploadSection" style="display:none;">
+
+<label>Upload Stock CSV File</label>
+
+<input
+type="file"
+name="stock_file"
+accept=".csv">
+
+</div>
+
+
+
+<label>Past Historical Data Range</label>
+
+<select name="past_range" required>
+
+<option value="" disabled selected>-- Select Past Range --</option>
+
+<option value="6m" {% if selected_past == "6m" %}selected{% endif %}>
+Past 6 Months
+</option>
+
+<option value="1y" {% if selected_past == "1y" %}selected{% endif %}>
+Past 1 Year
+</option>
+
+<option value="3y" {% if selected_past == "3y" %}selected{% endif %}>
+Past 3 Years
+</option>
+
+</select>
+
+
+<label>Future Prediction Period</label>
+
+<select name="future_range" required>
+
+<option value="" disabled selected>-- Select Future Period --</option>
+
+<option value="1y" {% if selected_future == "1y" %}selected{% endif %}>
+After 1 Year
+</option>
+
+<option value="3y" {% if selected_future == "3y" %}selected{% endif %}>
+After 3 Years
+</option>
+
+<option value="5y" {% if selected_future == "5y" %}selected{% endif %}>
+After 5 Years
+</option>
+
+</select>
+
+<button type="submit">Predict</button>
+
+</form>
+
+
+
+{% if result %}
+
+{% if result.error %}
+
+<div class="error">
+{{ result.error }}
+</div>
+
+{% else %}
+
+<div class="result">
+
+<p><b>Stock:</b> {{ result.stock }}</p>
+
+<p><b>Current Price:</b> {{ result.current_price }}</p>
+
+<p><b>Predicted Price after {{ result.years }}:</b> {{ result.future_price }}</p>
+
+<p><b>Expected Profit (%):</b> {{ result.profit_percent }}</p>
+
+<p><b>Decision:</b>
+
+<span class="{{ result.color }}">
+{{ result.decision }}
+</span>
+
+</p>
+
+</div>
+
+{% endif %}
+
+{% endif %}
+
+
+
+{% if graph_url %}
+
+<div class="graph-container">
+
+<h3>📈 Price Trend</h3>
+
+{{ graph_url | safe }}
+
+</div>
+
+{% endif %}
+
+</div>
+
+</body>
+</html>

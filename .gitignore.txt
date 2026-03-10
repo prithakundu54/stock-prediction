@@ -1,0 +1,15 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.cache/
+*.log
+.DS_Store
+.env
+
+# training cache (large files)
+cache/
+
+# models (keep if small)
+# lstm_model/
